@@ -31,3 +31,8 @@ tongji.baidu.com
 tv.sohu.com
 ue.yeyoucdn.com
 wl.spotify.com
+testin.cn
+search.browser.miui.com
+browser.miui.com
+browser.mi-img.com
+wl.jd.com
