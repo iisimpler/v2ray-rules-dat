@@ -28,6 +28,10 @@ jobs:
           echo "WIN_SPY=https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt" >> $GITHUB_ENV
           echo "WIN_UPDATE=https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/update.txt" >> $GITHUB_ENV
           echo "WIN_EXTRA=https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/extra.txt" >> $GITHUB_ENV
+          echo "ANTI_AD_REJECT_URL=https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-adguard.txt" >> $GITHUB_ENV
+          echo "CJX_ANNOYANCE_REJECT_URL=https://raw.githubusercontent.com/cjx82630/cjxlist/master/cjx-annoyance.txt" >> $GITHUB_ENV
+          echo "COOKIE_REJECT_URL=https://www.i-dont-care-about-cookies.eu/abp/" >> $GITHUB_ENV
+          echo "EASY_PRIVACY_REJECT_URL=https://easylist-downloads.adblockplus.org/easyprivacy.txt" >> $GITHUB_ENV
         shell: bash
 
       - name: Checkout the "hidden" branch of this repo
@@ -88,6 +92,10 @@ jobs:
           curl -sSL $ADGUARD_DNS_REJECT_URL | perl -ne '/^\|\|([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})\^$/ && print "$1\n"' | perl -ne 'print if not /^[0-9]{1,3}(\.[0-9]{1,3}){3}$/' >> temp-reject.txt
           curl -sSL $PETERLOWE_REJECT_URL | perl -ne '/^127\.0\.0\.1\s([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})$/ && print "$1\n"' >> temp-reject.txt
           curl -sSL $DANPOLLOCK_REJECT_URL | perl -ne '/^127\.0\.0\.1\s([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})/ && print "$1\n"' | sed '1d' >> temp-reject.txt
+          curl -sSL $ANTI_AD_REJECT_URL | perl -ne '/^\|\|([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})\^$/ && print "$1\n"' | perl -ne 'print if not /^[0-9]{1,3}(\.[0-9]{1,3}){3}$/' >> temp-reject.txt
+          curl -sSL $CJX_ANNOYANCE_REJECT_URL | perl -ne '/^\|\|([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})\^$/ && print "$1\n"' | perl -ne 'print if not /^[0-9]{1,3}(\.[0-9]{1,3}){3}$/' >> temp-reject.txt
+          curl -sSL $EASY_PRIVACY_REJECT_URL | perl -ne '/^\|\|([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})\^$/ && print "$1\n"' | perl -ne 'print if not /^[0-9]{1,3}(\.[0-9]{1,3}){3}$/' >> temp-reject.txt
+          curl -sSL $COOKIE_REJECT_URL | perl -ne '/^\|\|([-_0-9a-zA-Z]+(\.[-_0-9a-zA-Z]+){1,64})\^$/ && print "$1\n"' | perl -ne 'print if not /^[0-9]{1,3}(\.[0-9]{1,3}){3}$/' >> temp-reject.txt
 
       - name: Reserve `full`, `regexp` and `keyword` type of rules from custom lists to "reserve" files
         run: |
@@ -124,9 +132,12 @@ jobs:
 
       - name: Remove domains from "need-to-remove" lists in "hidden" branch
         run: |
-          diff ./direct-need-to-remove.txt ./direct-list-without-redundant | awk '/^>/{print $2}' > temp-cn.txt
-          diff ./proxy-need-to-remove.txt ./proxy-list-without-redundant | awk '/^>/{print $2}' > temp-geolocation-\!cn.txt
-          diff ./reject-need-to-remove.txt ./reject-list-without-redundant | awk '/^>/{print $2}' > temp-category-ads-all.txt
+          sort -u ./direct-need-to-remove.txt > ./direct-need-to-remove.sort.txt
+          sort -u ./proxy-need-to-remove.txt > ./proxy-need-to-remove.sort.txt
+          sort -u ./reject-need-to-remove.txt > ./reject-need-to-remove.sort.txt
+          diff ./direct-need-to-remove.sort.txt ./direct-list-without-redundant | awk '/^>/{print $2}' > temp-cn.txt
+          diff ./proxy-need-to-remove.sort.txt ./proxy-list-without-redundant | awk '/^>/{print $2}' > temp-geolocation-\!cn.txt
+          diff ./reject-need-to-remove.sort.txt ./reject-list-without-redundant | awk '/^>/{print $2}' > temp-category-ads-all.txt
 
       - name: Remove domains end with ".cn" in "temp-geolocation-!cn.txt" and write lists to data directory
         run: |
@@ -142,6 +153,12 @@ jobs:
           [ -f "direct-reserve.txt" ] && cat direct-reserve.txt >> ./community/data/cn
           [ -f "proxy-reserve.txt" ] && cat proxy-reserve.txt >> ./community/data/geolocation-\!cn
           [ -f "reject-reserve.txt" ] && cat reject-reserve.txt >> ./community/data/category-ads-all
+          cp ./community/data/cn direct-list.txt.tmp
+          cp ./community/data/geolocation-\!cn proxy-list.txt.tmp
+          cp ./community/data/category-ads-all reject-list.txt.tmp
+          diff ./direct-need-to-remove.sort.txt direct-list.txt.tmp | awk '/^>/{print $2}' > ./community/data/cn
+          diff ./proxy-need-to-remove.sort.txt .proxy-list.txt.tmp | awk '/^>/{print $2}' > ./community/data/geolocation-\!cn
+          diff ./reject-need-to-remove.sort.txt reject-list.txt.tmp | awk '/^>/{print $2}' > ./community/data/category-ads-all
           cp ./community/data/cn direct-list.txt
           cp ./community/data/geolocation-\!cn proxy-list.txt
           cp ./community/data/category-ads-all reject-list.txt
