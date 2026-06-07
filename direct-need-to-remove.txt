@@ -1,4 +1,3 @@
-dl.google.com
 103.com
 123cha.com
 95081.com
@@ -32,6 +31,7 @@ xjp.cc
 yanghengjun.com
 ydy.com
 yslang.com
+full:dl.google.com
 full:checkin.gstatic.com
 full:connectivitycheck.gstatic.com
 full:csi.gstatic.com
